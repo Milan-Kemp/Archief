@@ -2,16 +2,16 @@ import { Link } from 'react-router-dom'
 import { DOMAIN_COLORS } from '../../lib/domain'
 import { getGroupLabel } from '../../lib/timelineScale'
 import { formatYearRange } from '../../lib/year'
-import type { Item } from '../../types/item'
+import type { DatedItem } from '../../types/item'
 
 interface Props {
-  items: Item[]
+  items: DatedItem[]
 }
 
 export function TimelineMobile({ items }: Props) {
   const sorted = [...items].sort((a, b) => a.year_start - b.year_start)
 
-  const groups: { label: string; items: Item[] }[] = []
+  const groups: { label: string; items: DatedItem[] }[] = []
   for (const item of sorted) {
     const { key, label } = getGroupLabel(item.year_start)
     const last = groups[groups.length - 1]
@@ -63,6 +63,11 @@ export function TimelineMobile({ items }: Props) {
                   <p className="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
                     {formatYearRange(item.year_start, item.year_end, item.date_precision)}
                   </p>
+                  {item.topic && (
+                    <p className="truncate text-xs text-neutral-400 dark:text-neutral-500">
+                      {item.topic}
+                    </p>
+                  )}
                 </div>
               </Link>
             ))}

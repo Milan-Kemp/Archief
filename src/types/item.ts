@@ -3,6 +3,8 @@ export type Domain = 'history' | 'philosophy' | 'science'
 export type DatePrecision = 'exact' | 'decade' | 'century' | 'era'
 export type ItemStatus = 'to_watch' | 'done'
 
+export type DatedItem = Item & { year_start: number }
+
 export interface Item {
   id: string
   user_id: string
@@ -12,7 +14,8 @@ export interface Item {
   author: string | null
   thumbnail_url: string | null
   domain: Domain
-  year_start: number
+  topic: string | null
+  year_start: number | null
   year_end: number | null
   date_precision: DatePrecision
   region: string | null

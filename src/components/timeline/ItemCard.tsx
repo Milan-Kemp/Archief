@@ -29,9 +29,14 @@ export function ItemCard({ item }: Props) {
         {item.author && (
           <p className="truncate text-xs text-neutral-500 dark:text-neutral-400">{item.author}</p>
         )}
-        <p className="text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
-          {formatYearRange(item.year_start, item.year_end, item.date_precision)}
-        </p>
+        {item.year_start !== null && (
+          <p className="truncate text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+            {formatYearRange(item.year_start, item.year_end, item.date_precision)}
+          </p>
+        )}
+        {item.topic && (
+          <p className="truncate text-xs text-neutral-400 dark:text-neutral-500">{item.topic}</p>
+        )}
       </div>
     </Link>
   )

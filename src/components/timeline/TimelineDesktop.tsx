@@ -4,11 +4,11 @@ import { buildScale, getYearRange } from '../../lib/timelineScale'
 import { assignLanes } from '../../lib/timelineLayout'
 import { AXIS_HEIGHT, BAR_HEIGHT, CARD_HEIGHT, CARD_WIDTH, LANE_HEIGHT, ROW_GAP } from '../../lib/timelineConstants'
 import { ItemCard } from './ItemCard'
-import type { Item, Domain } from '../../types/item'
+import type { DatedItem, Domain } from '../../types/item'
 import type { Tab } from './DomainTabs'
 
 interface Props {
-  items: Item[]
+  items: DatedItem[]
   activeTab: Tab
 }
 
@@ -17,7 +17,7 @@ export function TimelineDesktop({ items, activeTab }: Props) {
   const { min, max } = getYearRange(years)
   const scale = useMemo(() => buildScale(min, max), [min, max])
 
-  const rows: { domain: Domain; items: Item[] }[] =
+  const rows: { domain: Domain; items: DatedItem[] }[] =
     activeTab === 'all'
       ? DOMAINS.map((domain) => ({ domain, items: items.filter((i) => i.domain === domain) }))
       : [{ domain: activeTab, items }]

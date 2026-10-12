@@ -29,6 +29,7 @@ export function AddItemForm({ onAdded, onClose }: Props) {
   const [author, setAuthor] = useState('')
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
   const [domain, setDomain] = useState<Domain>('history')
+  const [topic, setTopic] = useState('')
   const [yearInput, setYearInput] = useState('')
   const [precisionOverride, setPrecisionOverride] = useState<DatePrecision | null>(null)
   const [notes, setNotes] = useState('')
@@ -36,7 +37,8 @@ export function AddItemForm({ onAdded, onClose }: Props) {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const parsedYear = yearInput ? parseYear(yearInput) : null
+  const yearProvided = yearInput.trim() !== ''
+  const parsedYear = yearProvided ? parseYear(yearInput) : null
   const precision = precisionOverride ?? parsedYear?.date_precision ?? 'exact'
 
   async function handleUrlBlur() {
@@ -60,7 +62,7 @@ export function AddItemForm({ onAdded, onClose }: Props) {
       setError('Domein is verplicht.')
       return
     }
-    if (!parsedYear) {
+    if (yearProvided && !parsedYear) {
       setError('Jaartal snap ik niet. Probeer -500, 500 v.Chr. of 1600s.')
       return
     }
@@ -78,9 +80,10 @@ export function AddItemForm({ onAdded, onClose }: Props) {
       author: author.trim() || null,
       thumbnail_url: thumbnailUrl,
       domain,
-      year_start: parsedYear.year_start,
-      year_end: parsedYear.year_end,
-      date_precision: precision,
+      topic: topic.trim() || null,
+      year_start: parsedYear ? parsedYear.year_start : null,
+      year_end: parsedYear ? parsedYear.year_end : null,
+      date_precision: parsedYear ? precision : 'era',
       notes,
       status: 'to_watch',
     })
@@ -181,36 +184,48 @@ export function AddItemForm({ onAdded, onClose }: Props) {
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          Jaartal *
+          Onderwerp / stroming
           <input
             type="text"
-            required
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            placeholder="bv. Stoïcisme, Kwantummechanica"
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          Jaartal
+          <input
+            type="text"
             value={yearInput}
             onChange={(e) => setYearInput(e.target.value)}
-            placeholder="-500, 500 v.Chr., 1600s, 1618-1648"
+            placeholder="optioneel — -500, 500 v.Chr., 1600s, 1618-1648"
             className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm tabular-nums dark:border-neutral-700 dark:bg-neutral-900"
           />
-          {parsedYear && (
+          {yearProvided && parsedYear && (
             <span className="text-xs text-neutral-500">
               → {formatYearRange(parsedYear.year_start, parsedYear.year_end, precision)}
             </span>
           )}
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          Precisie
-          <select
-            value={precision}
-            onChange={(e) => setPrecisionOverride(e.target.value as DatePrecision)}
-            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-          >
-            {PRECISIONS.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        {yearProvided && (
+          <label className="flex flex-col gap-1 text-sm">
+            Precisie
+            <select
+              value={precision}
+              onChange={(e) => setPrecisionOverride(e.target.value as DatePrecision)}
+              className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            >
+              {PRECISIONS.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label className="flex flex-col gap-1 text-sm">
           Notities

@@ -80,9 +80,12 @@ export function ItemDetail() {
           </span>
           <h1 className="font-serif text-2xl leading-tight">{item.title}</h1>
           {item.author && <p className="text-sm text-neutral-500 dark:text-neutral-400">{item.author}</p>}
-          <p className="text-sm tabular-nums text-neutral-500 dark:text-neutral-400">
-            {formatYearRange(item.year_start, item.year_end, item.date_precision)}
-          </p>
+          {item.year_start !== null && (
+            <p className="text-sm tabular-nums text-neutral-500 dark:text-neutral-400">
+              {formatYearRange(item.year_start, item.year_end, item.date_precision)}
+            </p>
+          )}
+          {item.topic && <p className="text-sm text-neutral-500 dark:text-neutral-400">{item.topic}</p>}
         </div>
 
         {item.type === 'video' &&

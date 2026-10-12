@@ -51,7 +51,8 @@ Geen andere dependencies toevoegen zonder het eerst te vragen.
 | `author` | text, nullable | Kanaal bij video, auteur bij boek |
 | `thumbnail_url` | text, nullable | |
 | `domain` | text | `history` / `philosophy` / `science` |
-| `year_start` | integer | Negatief = v.Chr. **Geen Date-type**, zie risico's |
+| `topic` | text, nullable | Onderwerp/stroming, bv. "Stoïcisme", "Kwantummechanica". Los van jaartal, voor groeperen per topic |
+| `year_start` | integer, nullable | Negatief = v.Chr. **Geen Date-type**, zie risico's. Optioneel: niet elk onderwerp hangt aan één jaartal (zie risico 8) |
 | `year_end` | integer, nullable | Null = één moment |
 | `date_precision` | text | `exact` / `decade` / `century` / `era` |
 | `region` | text, nullable | Vrij tekstveld, later eventueel lijst |
@@ -85,8 +86,11 @@ RLS aan op **alle** tabellen. Policy: `user_id = auth.uid()` voor select, insert
 
 - Inloggen met magic link (e-mail), geen wachtwoord
 - Item toevoegen: url plakken, bij YouTube automatisch titel, kanaal en thumbnail ophalen
-- Velden invullen: domein, jaar start/eind, precisie, notities
+- Velden invullen: domein, topic (onderwerp/stroming), jaar start/eind (optioneel), precisie, notities
 - **Tijdlijnweergave** (hoofdscherm), met tabs: Alles / Geschiedenis / Filosofie / Wetenschap
+  - Alles en Geschiedenis: alleen tijdlijn, en alleen items met een jaartal (anders is er niets om te positioneren)
+  - Filosofie: schakelaar tijdlijn ↔ per onderwerp gegroepeerd (standaard tijdlijn)
+  - Wetenschap: schakelaar tijdlijn ↔ per onderwerp gegroepeerd, standaard per onderwerp (grid), tijdlijn als optie
 - Item openen: notities lezen en bewerken, video embedded afspelen
 - Werkt op telefoonbreedte
 
@@ -137,8 +141,9 @@ Clean en rustig, maar niet kaal. Het moet voelen als een studieruimte, niet als 
 
 ### Tijdlijn-layout
 
-- **Desktop:** horizontale as met eeuwen, items als kaarten erboven/eronder. Bij "Alles" drie rijen (één per domein) zodat je verbanden ziet op dezelfde verticale lijn. Dit is de belangrijkste weergave van de app.
+- **Desktop:** horizontale as met eeuwen, items als kaarten erboven/eronder. Bij "Alles" drie rijen (één per domein) zodat je verbanden ziet op dezelfde verticale lijn. Dit is de belangrijkste weergave van de app. Alleen items met een jaartal komen hierop; items zonder jaartal tel je apart, zodat ze niet stilletjes verdwijnen.
 - **Mobiel:** verticale tijdlijn, gegroepeerd per eeuw met sticky eeuwkoppen. Domein als gekleurde stip links.
+- **Per onderwerp (grid):** voor Filosofie en Wetenschap, als alternatief voor de tijdlijn (bij Wetenschap de standaardweergave). Items gegroepeerd op `topic`, als kaartjes in een grid per groep — net als collecties in Raindrop.io. Items zonder topic vallen in een groep "Zonder onderwerp" onderaan. Hier mogen items zonder jaartal ook getoond worden, dat is precies waarvoor dit bestaat (zie risico 8).
 
 ---
 
@@ -172,11 +177,11 @@ Ideaal is: in de YouTube-app op "Delen" tikken en de app kiezen. Dat heet de Web
 
 ### 7. Invoeren kost te veel moeite
 Het grootste risico is niet technisch. Als een item toevoegen meer dan 30 seconden kost, stopt Milan met gebruiken en is de app dood.
-**Oplossing:** alleen url, domein en jaartal zijn verplicht. Al het andere mag later. Jaartal-invoer moet snel: typ `-500` of `500 v.Chr.` of `1600s`, de app snapt het. Precisie standaard op `century` voor vage dingen.
+**Oplossing:** alleen titel en domein zijn verplicht. Jaartal is optioneel (zie risico 8), al het andere mag later. Jaartal-invoer moet snel: typ `-500` of `500 v.Chr.` of `1600s`, de app snapt het. Precisie standaard op `century` voor vage dingen.
 
 ### 8. Dingen die niet in één jaartal passen
-Een video over "de geschiedenis van Rome" beslaat 1200 jaar. Een filosofieboek over stoïcisme raakt aan 300 v.Chr. en 180 n.Chr. Een video kan meerdere periodes behandelen.
-**Oplossing:** fase 1 houdt het bij start + eind. Lange periodes tonen als balk in plaats van punt. Als meerdere periodes per item vaak voorkomt na gebruik, in fase 3 een aparte `periods`-tabel. Niet vooraf bouwen.
+Een video over "de geschiedenis van Rome" beslaat 1200 jaar. Een filosofieboek over stoïcisme raakt aan 300 v.Chr. en 180 n.Chr. Een video kan meerdere periodes behandelen. En sommige onderwerpen horen helemaal niet bij één jaartal: een filosofische stroming of een natuurkunde-topic is iets om op onderwerp te verzamelen, niet om op een as te pinnen.
+**Oplossing:** fase 1 houdt het bij start + eind. Lange periodes tonen als balk in plaats van punt. Voor onderwerpen zonder vast jaartal: `year_start` is optioneel en er is een `topic`-veld om op onderwerp/stroming te groeperen in plaats van op tijd (Filosofie en Wetenschap, zie sectie 5). Als meerdere periodes per item vaak voorkomt na gebruik, in fase 3 een aparte `periods`-tabel. Niet vooraf bouwen.
 
 ### 9. Scope creep
 Dit is een project dat zich leent om eindeloos aan te sleutelen. Zie de "Niet bouwen"-lijst.
