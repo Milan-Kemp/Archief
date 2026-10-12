@@ -14,5 +14,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // eigen hash-opschoning (window.location.hash = '') met HashRouter, wat na het
 // inloggen een wit scherm gaf.
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: { flowType: 'pkce' },
+  auth: {
+    flowType: 'pkce',
+    // Expliciet (zijn al de default): sessie overleeft het sluiten van de
+    // browser (localStorage) en ververst zichzelf op de achtergrond.
+    persistSession: true,
+    autoRefreshToken: true,
+  },
 })

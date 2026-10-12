@@ -100,9 +100,9 @@ RLS aan op **alle** tabellen. Policy: `user_id = auth.uid()` voor select, insert
 
 ### Fase 1: MVP (eerste versie die bruikbaar is)
 
-- Inloggen met magic link (e-mail), geen wachtwoord
+- Inloggen met e-mail + wachtwoord. Magic link blijft bestaan als "wachtwoord vergeten"-optie (`signInWithOtp`). Omdat het account oorspronkelijk zonder wachtwoord is aangemaakt (eerste versie had alleen magic link), staat er in de app een plek om een wachtwoord in te stellen via `supabase.auth.updateUser({ password })` — eenmalig nodig, daarna gewoon e-mail + wachtwoord. Sessie overleeft het sluiten van de browser (Supabase `persistSession`/`autoRefreshToken`, via localStorage)
 - Item toevoegen: url plakken, bij YouTube automatisch titel, kanaal en thumbnail ophalen
-- Velden invullen: domein, topic (onderwerp/stroming), jaar start/eind (optioneel), precisie, landen, personen, tags, notities
+- Velden invullen: domein, topic (onderwerp/stroming), jaar start/eind (optioneel), precisie, locaties, personen, tags, notities
 - **Tijdlijnweergave** (hoofdscherm), met tabs: Alles / Geschiedenis / Filosofie / Wetenschap
   - Alles en Geschiedenis: alleen tijdlijn, en alleen items met een jaartal (anders is er niets om te positioneren)
   - Filosofie: schakelaar tijdlijn ↔ per onderwerp gegroepeerd (standaard tijdlijn)

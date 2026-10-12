@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useItems } from '../hooks/useItems'
 import { useItemLocations } from '../hooks/useItemLocations'
 import { ItemForm } from '../components/ItemForm'
+import { SetPasswordForm } from '../components/SetPasswordForm'
 import { Timeline } from '../components/timeline/Timeline'
 import { ItemsMap } from '../components/map/ItemsMap'
 
@@ -13,6 +14,7 @@ export function Home() {
   const { locations, loading: locationsLoading, refresh: refreshLocations } = useItemLocations()
   const loading = itemsLoading || locationsLoading
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [mainView, setMainView] = useState<MainView>('timeline')
 
   return (
@@ -36,6 +38,13 @@ export function Home() {
             className="rounded-lg bg-[#1C1C1A] px-3 py-1.5 text-sm font-medium text-white dark:bg-white dark:text-[#1C1C1A]"
           >
             + Item toevoegen
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowPasswordForm(true)}
+            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
+          >
+            Wachtwoord instellen
           </button>
           <button
             type="button"
@@ -65,6 +74,8 @@ export function Home() {
           }}
         />
       )}
+
+      {showPasswordForm && <SetPasswordForm onClose={() => setShowPasswordForm(false)} />}
     </div>
   )
 }
