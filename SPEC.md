@@ -32,7 +32,7 @@ Secundair: het is een portfolioproject. Code moet netjes en leesbaar zijn, met e
 | PWA | `vite-plugin-pwa` | Installeerbaar op telefoon |
 | Hosting | GitHub Pages via GitHub Actions | Bekende workflow |
 | Notities | Markdown, render met `react-markdown` | Simpel, exporteerbaar |
-| Kaart | `react-leaflet` + `react-leaflet-cluster`, CARTO-tegels (Positron/Dark Matter), Nominatim voor geocoding | Gratis, geen API-key, echte interactieve kaart met zoom/pan en clustering |
+| Kaart | `react-leaflet` + `react-leaflet-cluster`, vector-tegels van OpenFreeMap (via `@maplibre/maplibre-gl-leaflet`), Nominatim voor geocoding | Gratis, geen API-key, geen watermerk, echte interactieve kaart met zoom/pan en clustering |
 
 Geen andere dependencies toevoegen zonder het eerst te vragen.
 
@@ -168,7 +168,8 @@ Clean en rustig, maar niet kaal. Het moet voelen als een studieruimte, niet als 
 ### Kaartweergave
 
 - Tweede hoofdweergave naast de tijdlijn (schakelaar in de header), met dezelfde domein-tabs erboven.
-- Echte kaart (react-leaflet), CARTO-tegels: Positron in light mode, Dark Matter in dark mode (volgt `prefers-color-scheme`, net als de rest van de app).
+- Echte kaart (react-leaflet), vector-tegels van OpenFreeMap getekend via MapLibre GL (`@maplibre/maplibre-gl-leaflet`, zodat Leaflet's clustering/markers/popups blijven werken): stijl "liberty" in light mode, "dark" in dark mode (volgt `prefers-color-scheme`, net als de rest van de app). Gratis, geen API-key, geen watermerk — in tegenstelling tot CARTO's gratis tegels.
+- Minimale zoom en wereldwijde `maxBounds` ingesteld zodat er geen grijze balken of herhalende wereld te zien zijn bij uitzoomen of pannen.
 - Items staan op hun punt(en) als kleine marker: thumbnail als die er is, anders een gekleurde stip in de domeinkleur. Bij uitzoomen clusteren markers die dicht bij elkaar liggen tot een getal, zodat de kaart niet dichtslibt.
 - Klik op een marker opent een popup met het kaartje (dezelfde kaartjes als de tijdlijn/topic-grid) — dat kaartje is zelf de link naar de detailpagina.
 - Bij item toevoegen/bewerken: zoekbalk boven de kaart (Nominatim geocoding) om naar een plaats te springen, daarna exact klikken op de kaart om een punt te plaatsen. Plaatsnaam wordt automatisch ingevuld via Nominatim reverse geocoding (overschrijfbaar), meerdere punten per item kunnen, elk apart verwijderbaar. Nominatim staat max. 1 verzoek/seconde toe — alle geocoding-aanroepen lopen door één gedeelde rij die dat afdwingt, app-breed.

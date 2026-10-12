@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import { MapContainer, Marker, Popup } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import { itemMarkerIcon } from '../../lib/markerIcon'
-import { useTileLayer, TILE_ATTRIBUTION } from '../../lib/useTileLayer'
+import { useMapStyle } from '../../lib/useMapStyle'
+import { MIN_MAP_ZOOM, WORLD_MAX_BOUNDS } from '../../lib/mapBounds'
 import { DomainTabs, type Tab } from '../timeline/DomainTabs'
 import { ItemCard } from '../timeline/ItemCard'
+import { MapLibreLayer } from './MapLibreLayer'
 import type { Item } from '../../types/item'
 import type { ItemLocation } from '../../types/location'
 
@@ -15,7 +17,7 @@ interface Props {
 
 export function ItemsMap({ items, locations }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('all')
-  const tileUrl = useTileLayer()
+  const mapStyle = useMapStyle()
 
   const itemsById = new Map(items.map((item) => [item.id, item]))
   const visibleItems =
@@ -30,8 +32,15 @@ export function ItemsMap({ items, locations }: Props) {
       </div>
 
       <div className="relative flex-1">
-        <MapContainer center={[20, 10]} zoom={2} style={{ height: '100%', width: '100%' }}>
-          <TileLayer url={tileUrl} attribution={TILE_ATTRIBUTION} />
+        <MapContainer
+          center={[20, 10]}
+          zoom={2}
+          minZoom={MIN_MAP_ZOOM}
+          maxBounds={WORLD_MAX_BOUNDS}
+          maxBoundsViscosity={1.0}
+          style={{ height: '100%', width: '100%' }}
+        >
+          <MapLibreLayer styleUrl={mapStyle} />
           <MarkerClusterGroup chunkedLoading>
             {visibleLocations.map((loc) => {
               const item = itemsById.get(loc.item_id)

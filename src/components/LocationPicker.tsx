@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from 'react-leaflet'
+import { MapContainer, Marker, Popup, useMapEvents } from 'react-leaflet'
 import type L from 'leaflet'
 import { reverseGeocode, searchPlaces, type GeocodeResult } from '../lib/nominatim'
 import { pointIcon } from '../lib/markerIcon'
-import { useTileLayer, TILE_ATTRIBUTION } from '../lib/useTileLayer'
+import { useMapStyle } from '../lib/useMapStyle'
+import { MIN_MAP_ZOOM, WORLD_MAX_BOUNDS } from '../lib/mapBounds'
+import { MapLibreLayer } from './map/MapLibreLayer'
 import type { LocationPoint } from '../types/location'
 
 interface Draft extends LocationPoint {
@@ -23,7 +25,7 @@ export function LocationPicker({ initialPoints, onChange }: Props) {
   const [results, setResults] = useState<GeocodeResult[]>([])
   const [searching, setSearching] = useState(false)
   const mapRef = useRef<L.Map | null>(null)
-  const tileUrl = useTileLayer()
+  const mapStyle = useMapStyle()
 
   useEffect(() => {
     onChange(points.map((p) => ({ lat: p.lat, lng: p.lng, name: p.name })))
@@ -104,10 +106,13 @@ export function LocationPicker({ initialPoints, onChange }: Props) {
         <MapContainer
           center={[20, 10]}
           zoom={2}
+          minZoom={MIN_MAP_ZOOM}
+          maxBounds={WORLD_MAX_BOUNDS}
+          maxBoundsViscosity={1.0}
           ref={mapRef}
           style={{ height: '100%', width: '100%' }}
         >
-          <TileLayer url={tileUrl} attribution={TILE_ATTRIBUTION} />
+          <MapLibreLayer styleUrl={mapStyle} />
           <ClickHandler onClick={handleMapClick} />
           {points.map((p) => (
             <Marker key={p.key} position={[p.lat, p.lng]} icon={pointIcon()}>
