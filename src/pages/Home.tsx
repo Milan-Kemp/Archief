@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useItems } from '../hooks/useItems'
-import { AddItemForm } from '../components/AddItemForm'
+import { ItemForm } from '../components/ItemForm'
 import { Timeline } from '../components/timeline/Timeline'
 
 export function Home() {
@@ -35,9 +35,9 @@ export function Home() {
       </main>
 
       {showAddForm && (
-        <AddItemForm
+        <ItemForm
           onClose={() => setShowAddForm(false)}
-          onAdded={() => {
+          onSaved={() => {
             setShowAddForm(false)
             refresh()
           }}

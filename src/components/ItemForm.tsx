@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { parseYear, formatYearRange } from '../lib/year'
 import { fetchYoutubeMetadata } from '../lib/youtube'
-import type { Domain, DatePrecision, ItemType } from '../types/item'
+import { joinList, parseList } from '../lib/list'
+import type { Domain, DatePrecision, Item, ItemType } from '../types/item'
 
 const DOMAINS: { value: Domain; label: string }[] = [
   { value: 'history', label: 'Geschiedenis' },
@@ -18,21 +19,29 @@ const PRECISIONS: { value: DatePrecision; label: string }[] = [
 ]
 
 interface Props {
-  onAdded: () => void
+  item?: Item
+  onSaved: () => void
   onClose: () => void
 }
 
-export function AddItemForm({ onAdded, onClose }: Props) {
-  const [url, setUrl] = useState('')
-  const [type, setType] = useState<ItemType>('video')
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
-  const [domain, setDomain] = useState<Domain>('history')
-  const [topic, setTopic] = useState('')
-  const [yearInput, setYearInput] = useState('')
-  const [precisionOverride, setPrecisionOverride] = useState<DatePrecision | null>(null)
-  const [notes, setNotes] = useState('')
+export function ItemForm({ item, onSaved, onClose }: Props) {
+  const [url, setUrl] = useState(item?.url ?? '')
+  const [type, setType] = useState<ItemType>(item?.type ?? 'video')
+  const [title, setTitle] = useState(item?.title ?? '')
+  const [author, setAuthor] = useState(item?.author ?? '')
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(item?.thumbnail_url ?? null)
+  const [domain, setDomain] = useState<Domain>(item?.domain ?? 'history')
+  const [topic, setTopic] = useState(item?.topic ?? '')
+  const [yearInput, setYearInput] = useState(
+    item && item.year_start !== null ? formatYearInputDefault(item) : '',
+  )
+  const [precisionOverride, setPrecisionOverride] = useState<DatePrecision | null>(
+    item?.date_precision ?? null,
+  )
+  const [region, setRegion] = useState(item?.region ?? '')
+  const [peopleInput, setPeopleInput] = useState(item ? joinList(item.people) : '')
+  const [tagsInput, setTagsInput] = useState(item ? joinList(item.tags) : '')
+  const [notes, setNotes] = useState(item?.notes ?? '')
   const [fetchingMeta, setFetchingMeta] = useState(false)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -58,10 +67,6 @@ export function AddItemForm({ onAdded, onClose }: Props) {
     e.preventDefault()
     setError('')
 
-    if (!domain) {
-      setError('Domein is verplicht.')
-      return
-    }
     if (yearProvided && !parsedYear) {
       setError('Jaartal snap ik niet. Probeer -500, 500 v.Chr. of 1600s.')
       return
@@ -73,7 +78,7 @@ export function AddItemForm({ onAdded, onClose }: Props) {
 
     setSaving(true)
 
-    const { error: insertError } = await supabase.from('items').insert({
+    const payload = {
       type,
       url: url || null,
       title: title.trim(),
@@ -84,18 +89,24 @@ export function AddItemForm({ onAdded, onClose }: Props) {
       year_start: parsedYear ? parsedYear.year_start : null,
       year_end: parsedYear ? parsedYear.year_end : null,
       date_precision: parsedYear ? precision : 'era',
+      region: region.trim() || null,
+      people: parseList(peopleInput),
+      tags: parseList(tagsInput),
       notes,
-      status: 'to_watch',
-    })
+    }
+
+    const { error: saveError } = item
+      ? await supabase.from('items').update(payload).eq('id', item.id)
+      : await supabase.from('items').insert({ ...payload, status: 'to_watch' })
 
     setSaving(false)
 
-    if (insertError) {
-      setError(insertError.message)
+    if (saveError) {
+      setError(saveError.message)
       return
     }
 
-    onAdded()
+    onSaved()
   }
 
   return (
@@ -106,7 +117,7 @@ export function AddItemForm({ onAdded, onClose }: Props) {
       >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-medium text-[#1C1C1A] dark:text-[#F5F5F2]">
-            Item toevoegen
+            {item ? 'Item bewerken' : 'Item toevoegen'}
           </h2>
           <button
             type="button"
@@ -228,6 +239,39 @@ export function AddItemForm({ onAdded, onClose }: Props) {
         )}
 
         <label className="flex flex-col gap-1 text-sm">
+          Regio
+          <input
+            type="text"
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            placeholder="bv. Europa, Griekenland"
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          Personen
+          <input
+            type="text"
+            value={peopleInput}
+            onChange={(e) => setPeopleInput(e.target.value)}
+            placeholder="komma-gescheiden, bv. Socrates, Plato"
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          Tags
+          <input
+            type="text"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+            placeholder="komma-gescheiden, bv. stoïcisme, ethiek"
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
           Notities
           <textarea
             value={notes}
@@ -249,4 +293,12 @@ export function AddItemForm({ onAdded, onClose }: Props) {
       </form>
     </div>
   )
+}
+
+function formatYearInputDefault(item: Item): string {
+  if (item.year_start === null) return ''
+  if (item.year_end !== null && item.year_end !== item.year_start) {
+    return `${item.year_start}-${item.year_end}`
+  }
+  return String(item.year_start)
 }

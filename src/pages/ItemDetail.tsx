@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { extractYoutubeId } from '../lib/youtube'
 import { DOMAIN_COLORS, DOMAIN_LABELS } from '../lib/domain'
 import { formatYearRange } from '../lib/year'
+import { ItemForm } from '../components/ItemForm'
 import type { Item } from '../types/item'
 
 export function ItemDetail() {
@@ -14,27 +15,26 @@ export function ItemDetail() {
   const [notFound, setNotFound] = useState(false)
   const [notes, setNotes] = useState('')
   const [editingNotes, setEditingNotes] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [videoError, setVideoError] = useState(false)
 
-  useEffect(() => {
+  async function loadItem() {
     if (!id) return
     setLoading(true)
     setNotFound(false)
-    supabase
-      .from('items')
-      .select('*')
-      .eq('id', id)
-      .single()
-      .then(({ data, error }) => {
-        if (error || !data) {
-          setNotFound(true)
-        } else {
-          setItem(data)
-          setNotes(data.notes)
-        }
-        setLoading(false)
-      })
+    const { data, error } = await supabase.from('items').select('*').eq('id', id).single()
+    if (error || !data) {
+      setNotFound(true)
+    } else {
+      setItem(data)
+      setNotes(data.notes)
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    loadItem()
   }, [id])
 
   async function saveNotes() {
@@ -61,10 +61,17 @@ export function ItemDetail() {
 
   return (
     <div className="min-h-screen bg-[#FAFAF7] text-[#1C1C1A] dark:bg-[#161614] dark:text-[#F5F5F2]">
-      <header className="border-b border-neutral-200 px-4 py-2.5 dark:border-neutral-800">
+      <header className="flex items-center justify-between border-b border-neutral-200 px-4 py-2.5 dark:border-neutral-800">
         <Link to="/" className="text-sm text-neutral-500 no-underline hover:text-neutral-800 dark:hover:text-neutral-200">
           ← Terug naar tijdlijn
         </Link>
+        <button
+          type="button"
+          onClick={() => setShowEditForm(true)}
+          className="text-sm text-neutral-500 underline hover:text-neutral-800 dark:hover:text-neutral-200"
+        >
+          Bewerken
+        </button>
       </header>
 
       <main className="mx-auto flex flex-col gap-6 px-4 py-8" style={{ maxWidth: '65ch' }}>
@@ -86,6 +93,13 @@ export function ItemDetail() {
             </p>
           )}
           {item.topic && <p className="text-sm text-neutral-500 dark:text-neutral-400">{item.topic}</p>}
+          {(item.region || item.people.length > 0 || item.tags.length > 0) && (
+            <div className="flex flex-col gap-1 pt-1 text-xs text-neutral-400 dark:text-neutral-500">
+              {item.region && <p>Regio: {item.region}</p>}
+              {item.people.length > 0 && <p>Personen: {item.people.join(', ')}</p>}
+              {item.tags.length > 0 && <p>Tags: {item.tags.join(', ')}</p>}
+            </div>
+          )}
         </div>
 
         {item.type === 'video' &&
@@ -166,6 +180,17 @@ export function ItemDetail() {
           )}
         </div>
       </main>
+
+      {showEditForm && (
+        <ItemForm
+          item={item}
+          onClose={() => setShowEditForm(false)}
+          onSaved={() => {
+            setShowEditForm(false)
+            loadItem()
+          }}
+        />
+      )}
     </div>
   )
 }
