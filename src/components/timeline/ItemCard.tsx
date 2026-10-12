@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { DOMAIN_COLORS } from '../../lib/domain'
 import { CARD_HEIGHT, CARD_WIDTH } from '../../lib/timelineConstants'
 import { formatYearRange } from '../../lib/year'
@@ -9,8 +10,9 @@ interface Props {
 
 export function ItemCard({ item }: Props) {
   return (
-    <div
-      className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
+    <Link
+      to={`/item/${item.id}`}
+      className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white no-underline shadow-sm transition-shadow duration-150 hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900"
       style={{
         width: CARD_WIDTH,
         height: CARD_HEIGHT,
@@ -31,6 +33,6 @@ export function ItemCard({ item }: Props) {
           {formatYearRange(item.year_start, item.year_end, item.date_precision)}
         </p>
       </div>
-    </div>
+    </Link>
   )
 }

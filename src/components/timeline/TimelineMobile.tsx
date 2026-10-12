@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { DOMAIN_COLORS } from '../../lib/domain'
 import { getGroupLabel } from '../../lib/timelineScale'
 import { formatYearRange } from '../../lib/year'
@@ -34,9 +35,10 @@ export function TimelineMobile({ items }: Props) {
           </div>
           <div className="flex flex-col">
             {group.items.map((item) => (
-              <div
+              <Link
                 key={item.id}
-                className="flex gap-3 border-b border-neutral-200/70 px-4 py-3 dark:border-neutral-800/70"
+                to={`/item/${item.id}`}
+                className="flex gap-3 border-b border-neutral-200/70 px-4 py-3 no-underline dark:border-neutral-800/70"
               >
                 <span
                   className="mt-1.5 h-2 w-2 shrink-0 rounded-full"
@@ -62,7 +64,7 @@ export function TimelineMobile({ items }: Props) {
                     {formatYearRange(item.year_start, item.year_end, item.date_precision)}
                   </p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
