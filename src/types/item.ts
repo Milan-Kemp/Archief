@@ -19,7 +19,6 @@ export interface Item {
   year_end: number | null
   date_precision: DatePrecision
   region: string | null
-  countries: string[]
   people: string[]
   tags: string[]
   notes: string

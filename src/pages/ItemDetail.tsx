@@ -4,14 +4,15 @@ import ReactMarkdown from 'react-markdown'
 import { supabase } from '../lib/supabase'
 import { extractYoutubeId } from '../lib/youtube'
 import { DOMAIN_COLORS, DOMAIN_LABELS } from '../lib/domain'
-import { countryName } from '../lib/countries'
 import { formatYearRange } from '../lib/year'
 import { ItemForm } from '../components/ItemForm'
 import type { Item } from '../types/item'
+import type { ItemLocation } from '../types/location'
 
 export function ItemDetail() {
   const { id } = useParams()
   const [item, setItem] = useState<Item | null>(null)
+  const [locations, setLocations] = useState<ItemLocation[]>([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [notes, setNotes] = useState('')
@@ -30,6 +31,11 @@ export function ItemDetail() {
     } else {
       setItem(data)
       setNotes(data.notes)
+      const { data: locationData } = await supabase
+        .from('item_locations')
+        .select('*')
+        .eq('item_id', id)
+      setLocations(locationData ?? [])
     }
     setLoading(false)
   }
@@ -94,10 +100,10 @@ export function ItemDetail() {
             </p>
           )}
           {item.topic && <p className="text-sm text-neutral-500 dark:text-neutral-400">{item.topic}</p>}
-          {(item.countries.length > 0 || item.people.length > 0 || item.tags.length > 0) && (
+          {(locations.length > 0 || item.people.length > 0 || item.tags.length > 0) && (
             <div className="flex flex-col gap-1 pt-1 text-xs text-neutral-400 dark:text-neutral-500">
-              {item.countries.length > 0 && (
-                <p>Landen: {item.countries.map(countryName).join(', ')}</p>
+              {locations.length > 0 && (
+                <p>Locaties: {locations.map((l) => l.name).join(', ')}</p>
               )}
               {item.people.length > 0 && <p>Personen: {item.people.join(', ')}</p>}
               {item.tags.length > 0 && <p>Tags: {item.tags.join(', ')}</p>}

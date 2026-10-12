@@ -34,17 +34,3 @@ body {
   padding: 0.1em 0.35em;
   border-radius: 4px;
 }
-
-.country-geo {
-  outline: none;
-  cursor: pointer;
-  transition: opacity 150ms;
-}
-
-.country-geo:hover {
-  opacity: 0.75;
-}
-
-.country-geo-disabled {
-  outline: none;
-}

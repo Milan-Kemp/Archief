@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useItems } from '../hooks/useItems'
+import { useItemLocations } from '../hooks/useItemLocations'
 import { ItemForm } from '../components/ItemForm'
 import { Timeline } from '../components/timeline/Timeline'
-import { WorldMap } from '../components/map/WorldMap'
+import { ItemsMap } from '../components/map/ItemsMap'
 
 type MainView = 'timeline' | 'map'
 
 export function Home() {
   const { items, loading, refresh } = useItems()
+  const { locations, refresh: refreshLocations } = useItemLocations()
   const [showAddForm, setShowAddForm] = useState(false)
   const [mainView, setMainView] = useState<MainView>('timeline')
 
@@ -48,7 +50,7 @@ export function Home() {
         {mainView === 'timeline' ? (
           <Timeline items={items} loading={loading} />
         ) : (
-          <WorldMap items={items} />
+          <ItemsMap items={items} locations={locations} />
         )}
       </main>
 
@@ -58,6 +60,7 @@ export function Home() {
           onSaved={() => {
             setShowAddForm(false)
             refresh()
+            refreshLocations()
           }}
         />
       )}

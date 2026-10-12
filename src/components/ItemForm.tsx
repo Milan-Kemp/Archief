@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { parseYear, formatYearRange } from '../lib/year'
 import { fetchYoutubeMetadata } from '../lib/youtube'
 import { joinList, parseList } from '../lib/list'
-import { CountryPicker } from './CountryPicker'
+import { LocationPicker } from './LocationPicker'
 import type { Domain, DatePrecision, Item, ItemType } from '../types/item'
+import type { LocationPoint } from '../types/location'
 
 const DOMAINS: { value: Domain; label: string }[] = [
   { value: 'history', label: 'Geschiedenis' },
@@ -39,13 +40,26 @@ export function ItemForm({ item, onSaved, onClose }: Props) {
   const [precisionOverride, setPrecisionOverride] = useState<DatePrecision | null>(
     item?.date_precision ?? null,
   )
-  const [countries, setCountries] = useState<string[]>(item?.countries ?? [])
+  const [locations, setLocations] = useState<LocationPoint[]>([])
+  const [locationsLoaded, setLocationsLoaded] = useState(!item)
   const [peopleInput, setPeopleInput] = useState(item ? joinList(item.people) : '')
   const [tagsInput, setTagsInput] = useState(item ? joinList(item.tags) : '')
   const [notes, setNotes] = useState(item?.notes ?? '')
   const [fetchingMeta, setFetchingMeta] = useState(false)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (!item) return
+    supabase
+      .from('item_locations')
+      .select('*')
+      .eq('item_id', item.id)
+      .then(({ data }) => {
+        setLocations((data ?? []).map((l) => ({ lat: l.lat, lng: l.lng, name: l.name })))
+        setLocationsLoaded(true)
+      })
+  }, [item])
 
   const yearProvided = yearInput.trim() !== ''
   const parsedYear = yearProvided ? parseYear(yearInput) : null
@@ -90,23 +104,42 @@ export function ItemForm({ item, onSaved, onClose }: Props) {
       year_start: parsedYear ? parsedYear.year_start : null,
       year_end: parsedYear ? parsedYear.year_end : null,
       date_precision: parsedYear ? precision : 'era',
-      countries,
       people: parseList(peopleInput),
       tags: parseList(tagsInput),
       notes,
     }
 
-    const { error: saveError } = item
-      ? await supabase.from('items').update(payload).eq('id', item.id)
-      : await supabase.from('items').insert({ ...payload, status: 'to_watch' })
+    let itemId = item?.id ?? null
 
-    setSaving(false)
-
-    if (saveError) {
-      setError(saveError.message)
-      return
+    if (item) {
+      const { error: saveError } = await supabase.from('items').update(payload).eq('id', item.id)
+      if (saveError) {
+        setSaving(false)
+        setError(saveError.message)
+        return
+      }
+    } else {
+      const { data, error: saveError } = await supabase
+        .from('items')
+        .insert({ ...payload, status: 'to_watch' })
+        .select('id')
+        .single()
+      if (saveError || !data) {
+        setSaving(false)
+        setError(saveError?.message ?? 'Opslaan is mislukt.')
+        return
+      }
+      itemId = data.id
     }
 
+    await supabase.from('item_locations').delete().eq('item_id', itemId)
+    if (locations.length > 0) {
+      await supabase
+        .from('item_locations')
+        .insert(locations.map((l) => ({ item_id: itemId, lat: l.lat, lng: l.lng, name: l.name })))
+    }
+
+    setSaving(false)
     onSaved()
   }
 
@@ -240,8 +273,12 @@ export function ItemForm({ item, onSaved, onClose }: Props) {
         )}
 
         <div className="flex flex-col gap-1 text-sm">
-          Landen
-          <CountryPicker value={countries} onChange={setCountries} />
+          Locaties
+          {locationsLoaded ? (
+            <LocationPicker initialPoints={locations} onChange={setLocations} />
+          ) : (
+            <p className="text-xs text-neutral-400">Locaties laden...</p>
+          )}
         </div>
 
         <label className="flex flex-col gap-1 text-sm">

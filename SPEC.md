@@ -32,7 +32,7 @@ Secundair: het is een portfolioproject. Code moet netjes en leesbaar zijn, met e
 | PWA | `vite-plugin-pwa` | Installeerbaar op telefoon |
 | Hosting | GitHub Pages via GitHub Actions | Bekende workflow |
 | Notities | Markdown, render met `react-markdown` | Simpel, exporteerbaar |
-| Kaart | `react-simple-maps` + `world-atlas` (Natural Earth TopoJSON) | Gratis, geen API-key, werkt offline/bundled |
+| Kaart | `react-leaflet` + `react-leaflet-cluster`, CARTO-tegels (Positron/Dark Matter), Nominatim voor geocoding | Gratis, geen API-key, echte interactieve kaart met zoom/pan en clustering |
 
 Geen andere dependencies toevoegen zonder het eerst te vragen.
 
@@ -56,14 +56,28 @@ Geen andere dependencies toevoegen zonder het eerst te vragen.
 | `year_start` | integer, nullable | Negatief = v.Chr. **Geen Date-type**, zie risico's. Optioneel: niet elk onderwerp hangt aan één jaartal (zie risico 8) |
 | `year_end` | integer, nullable | Null = één moment |
 | `date_precision` | text | `exact` / `decade` / `century` / `era` |
-| `region` | text, nullable | **Legacy.** Oud vrij tekstveld, vervangen door `countries`. Blijft in de tabel staan voor oude data maar wordt niet meer getoond of bewerkt |
-| `countries` | text[] | Landen aanklikken op een wereldkaart, opgeslagen als ISO 3166-1 alpha-2 codes (`NL`, `FR`, ...). Een item kan in meerdere landen liggen |
+| `region` | text, nullable | **Legacy.** Oud vrij tekstveld. Blijft in de tabel staan voor oude data maar wordt niet meer getoond of bewerkt |
 | `people` | text[] | |
 | `tags` | text[] | |
 | `notes` | text | Markdown |
 | `status` | text | `to_watch` / `done` |
 | `created_at` | timestamptz | Leerlog-datum, automatisch |
 | `updated_at` | timestamptz | |
+
+### Tabel `item_locations`
+
+Losse puntlocaties per item, voor de kaartweergave. Eén item kan meerdere punten hebben (bv. een video over "de Peloponnesische Oorlog" met zowel Athene als Sparta).
+
+| Kolom | Type | Notitie |
+|---|---|---|
+| `id` | uuid, PK | default `gen_random_uuid()` |
+| `item_id` | uuid | FK naar `items`, on delete cascade |
+| `lat` | double precision | |
+| `lng` | double precision | |
+| `name` | text | Plaatsnaam, automatisch via Nominatim reverse geocoding bij het klikken, handmatig overschrijfbaar |
+| `created_at` | timestamptz | |
+
+RLS via een `exists`-check op de bijbehorende `items`-rij (zelfde eigenaar-regel, geen directe `user_id` kolom nodig).
 
 ### Tabel `notes_timestamps` (fase 3)
 
@@ -94,9 +108,9 @@ RLS aan op **alle** tabellen. Policy: `user_id = auth.uid()` voor select, insert
   - Filosofie: schakelaar tijdlijn ↔ per onderwerp gegroepeerd (standaard tijdlijn)
   - Wetenschap: schakelaar tijdlijn ↔ per onderwerp gegroepeerd, standaard per onderwerp (grid), tijdlijn als optie
 - **Kaartweergave**, als tweede hoofdweergave naast de tijdlijn, met dezelfde domein-tabs:
-  - Landen kleuren naar aantal items in dat land (lichter = minder, donkerder = meer, per domein een andere tint)
-  - Klik op een land toont de items daar als kaartjes
-  - Bij item toevoegen/bewerken: landen aanklikken op een kleine kaart i.p.v. los tekstveld
+  - Echte interactieve kaart (zoom/pan), items als kleine thumbnail-markers, clustering bij uitzoomen
+  - Klik op een marker opent een popup met het kaartje van het item en een link naar de detailpagina
+  - Bij item toevoegen/bewerken: zoeken op plaatsnaam (Nominatim) en exact klikken om een punt te plaatsen, plaatsnaam automatisch ingevuld via reverse geocoding, meerdere punten per item mogelijk
 - Item openen: notities lezen en bewerken, video embedded afspelen, velden bewerken
 - Werkt op telefoonbreedte
 
@@ -154,10 +168,11 @@ Clean en rustig, maar niet kaal. Het moet voelen als een studieruimte, niet als 
 ### Kaartweergave
 
 - Tweede hoofdweergave naast de tijdlijn (schakelaar in de header), met dezelfde domein-tabs erboven.
-- Landen worden gekleurd naar aantal items in dat land binnen de actieve tab: een dunne kleurverloop-legenda (licht → donker) laat zien wat "meer" betekent. Bij een domein-tab de kleur van dat domein, bij "Alles" een neutrale kleur.
-- Klik op een gekleurd land toont de items daar als kaartjes onder de kaart (zelfde kaartjes als de tijdlijn/topic-grid). Landen zonder items zijn niet klikbaar.
-- Bij item toevoegen/bewerken: een kleine kaart waarop je één of meerdere landen aanklikt (toggle), met de geselecteerde landen ook als chips eronder om te verwijderen zonder precies te moeten klikken.
-- Oude `region`-waarden zijn bij de migratie best-effort omgezet naar `countries` (alleen exacte, veelvoorkomende landnamen herkend). Items die niets kregen, kun je gewoon opnieuw een land geven via bewerken.
+- Echte kaart (react-leaflet), CARTO-tegels: Positron in light mode, Dark Matter in dark mode (volgt `prefers-color-scheme`, net als de rest van de app).
+- Items staan op hun punt(en) als kleine marker: thumbnail als die er is, anders een gekleurde stip in de domeinkleur. Bij uitzoomen clusteren markers die dicht bij elkaar liggen tot een getal, zodat de kaart niet dichtslibt.
+- Klik op een marker opent een popup met het kaartje (dezelfde kaartjes als de tijdlijn/topic-grid) — dat kaartje is zelf de link naar de detailpagina.
+- Bij item toevoegen/bewerken: zoekbalk boven de kaart (Nominatim geocoding) om naar een plaats te springen, daarna exact klikken op de kaart om een punt te plaatsen. Plaatsnaam wordt automatisch ingevuld via Nominatim reverse geocoding (overschrijfbaar), meerdere punten per item kunnen, elk apart verwijderbaar. Nominatim staat max. 1 verzoek/seconde toe — alle geocoding-aanroepen lopen door één gedeelde rij die dat afdwingt, app-breed.
+- Landcodes (`countries`) zijn vervangen door deze losse puntlocaties en de kolom is verwijderd; er was nog geen data om te migreren.
 
 ---
 
