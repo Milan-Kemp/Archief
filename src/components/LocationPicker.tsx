@@ -4,7 +4,7 @@ import type L from 'leaflet'
 import { reverseGeocode, searchPlaces, type GeocodeResult } from '../lib/nominatim'
 import { pointIcon } from '../lib/markerIcon'
 import { useMapStyle } from '../lib/useMapStyle'
-import { MIN_MAP_ZOOM, WORLD_MAX_BOUNDS } from '../lib/mapBounds'
+import { MAX_MAP_ZOOM, MIN_MAP_ZOOM, WORLD_MAX_BOUNDS } from '../lib/mapBounds'
 import { MapLibreLayer } from './map/MapLibreLayer'
 import type { LocationPoint } from '../types/location'
 
@@ -107,6 +107,7 @@ export function LocationPicker({ initialPoints, onChange }: Props) {
           center={[20, 10]}
           zoom={2}
           minZoom={MIN_MAP_ZOOM}
+          maxZoom={MAX_MAP_ZOOM}
           maxBounds={WORLD_MAX_BOUNDS}
           maxBoundsViscosity={1.0}
           ref={mapRef}

@@ -1,7 +1,14 @@
 import { useEffect } from 'react'
 import { useMap } from 'react-leaflet'
 import L from 'leaflet'
+import { setWorkerUrl } from 'maplibre-gl'
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import '@maplibre/maplibre-gl-leaflet'
+
+// MapLibre zoekt zijn worker-bestand standaard relatief aan de plek van de
+// gebundelde JS-chunk — die staat er niet, dus zonder dit faalt de worker
+// alleen in de productiebuild (dev server serveert node_modules direct).
+setWorkerUrl(maplibreWorkerUrl)
 
 interface Props {
   styleUrl: string
