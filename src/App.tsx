@@ -1,19 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from './lib/useAuth'
 import { supabase } from './lib/supabase'
 import { Login } from './components/Login'
+import { AddItemForm } from './components/AddItemForm'
 
 function App() {
   const { session, loading } = useAuth()
   const [itemCount, setItemCount] = useState<number | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false)
 
-  useEffect(() => {
-    if (!session) return
+  const refreshCount = useCallback(() => {
     supabase
       .from('items')
       .select('*', { count: 'exact', head: true })
       .then(({ count }) => setItemCount(count ?? 0))
-  }, [session])
+  }, [])
+
+  useEffect(() => {
+    if (session) refreshCount()
+  }, [session, refreshCount])
 
   if (loading) return null
 
@@ -29,11 +34,28 @@ function App() {
       </p>
       <button
         type="button"
+        onClick={() => setShowAddForm(true)}
+        className="rounded-lg bg-[#1C1C1A] px-3 py-1.5 text-sm font-medium text-white dark:bg-white dark:text-[#1C1C1A]"
+      >
+        + Item toevoegen
+      </button>
+      <button
+        type="button"
         onClick={() => supabase.auth.signOut()}
         className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
       >
         Uitloggen
       </button>
+
+      {showAddForm && (
+        <AddItemForm
+          onClose={() => setShowAddForm(false)}
+          onAdded={() => {
+            setShowAddForm(false)
+            refreshCount()
+          }}
+        />
+      )}
     </div>
   )
 }
