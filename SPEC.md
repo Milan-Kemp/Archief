@@ -32,6 +32,7 @@ Secundair: het is een portfolioproject. Code moet netjes en leesbaar zijn, met e
 | PWA | `vite-plugin-pwa` | Installeerbaar op telefoon |
 | Hosting | GitHub Pages via GitHub Actions | Bekende workflow |
 | Notities | Markdown, render met `react-markdown` | Simpel, exporteerbaar |
+| Kaart | `react-simple-maps` + `world-atlas` (Natural Earth TopoJSON) | Gratis, geen API-key, werkt offline/bundled |
 
 Geen andere dependencies toevoegen zonder het eerst te vragen.
 
@@ -55,7 +56,8 @@ Geen andere dependencies toevoegen zonder het eerst te vragen.
 | `year_start` | integer, nullable | Negatief = v.Chr. **Geen Date-type**, zie risico's. Optioneel: niet elk onderwerp hangt aan één jaartal (zie risico 8) |
 | `year_end` | integer, nullable | Null = één moment |
 | `date_precision` | text | `exact` / `decade` / `century` / `era` |
-| `region` | text, nullable | Vrij tekstveld, later eventueel lijst |
+| `region` | text, nullable | **Legacy.** Oud vrij tekstveld, vervangen door `countries`. Blijft in de tabel staan voor oude data maar wordt niet meer getoond of bewerkt |
+| `countries` | text[] | Landen aanklikken op een wereldkaart, opgeslagen als ISO 3166-1 alpha-2 codes (`NL`, `FR`, ...). Een item kan in meerdere landen liggen |
 | `people` | text[] | |
 | `tags` | text[] | |
 | `notes` | text | Markdown |
@@ -86,12 +88,16 @@ RLS aan op **alle** tabellen. Policy: `user_id = auth.uid()` voor select, insert
 
 - Inloggen met magic link (e-mail), geen wachtwoord
 - Item toevoegen: url plakken, bij YouTube automatisch titel, kanaal en thumbnail ophalen
-- Velden invullen: domein, topic (onderwerp/stroming), jaar start/eind (optioneel), precisie, notities
+- Velden invullen: domein, topic (onderwerp/stroming), jaar start/eind (optioneel), precisie, landen, personen, tags, notities
 - **Tijdlijnweergave** (hoofdscherm), met tabs: Alles / Geschiedenis / Filosofie / Wetenschap
   - Alles en Geschiedenis: alleen tijdlijn, en alleen items met een jaartal (anders is er niets om te positioneren)
   - Filosofie: schakelaar tijdlijn ↔ per onderwerp gegroepeerd (standaard tijdlijn)
   - Wetenschap: schakelaar tijdlijn ↔ per onderwerp gegroepeerd, standaard per onderwerp (grid), tijdlijn als optie
-- Item openen: notities lezen en bewerken, video embedded afspelen
+- **Kaartweergave**, als tweede hoofdweergave naast de tijdlijn, met dezelfde domein-tabs:
+  - Landen kleuren naar aantal items in dat land (lichter = minder, donkerder = meer, per domein een andere tint)
+  - Klik op een land toont de items daar als kaartjes
+  - Bij item toevoegen/bewerken: landen aanklikken op een kleine kaart i.p.v. los tekstveld
+- Item openen: notities lezen en bewerken, video embedded afspelen, velden bewerken
 - Werkt op telefoonbreedte
 
 ### Fase 2: bruikbaar maken
@@ -144,6 +150,14 @@ Clean en rustig, maar niet kaal. Het moet voelen als een studieruimte, niet als 
 - **Desktop:** horizontale as met eeuwen, items als kaarten erboven/eronder. Bij "Alles" drie rijen (één per domein) zodat je verbanden ziet op dezelfde verticale lijn. Dit is de belangrijkste weergave van de app. Alleen items met een jaartal komen hierop; items zonder jaartal tel je apart, zodat ze niet stilletjes verdwijnen.
 - **Mobiel:** verticale tijdlijn, gegroepeerd per eeuw met sticky eeuwkoppen. Domein als gekleurde stip links.
 - **Per onderwerp (grid):** voor Filosofie en Wetenschap, als alternatief voor de tijdlijn (bij Wetenschap de standaardweergave). Items gegroepeerd op `topic`, als kaartjes in een grid per groep — net als collecties in Raindrop.io. Items zonder topic vallen in een groep "Zonder onderwerp" onderaan. Hier mogen items zonder jaartal ook getoond worden, dat is precies waarvoor dit bestaat (zie risico 8).
+
+### Kaartweergave
+
+- Tweede hoofdweergave naast de tijdlijn (schakelaar in de header), met dezelfde domein-tabs erboven.
+- Landen worden gekleurd naar aantal items in dat land binnen de actieve tab: een dunne kleurverloop-legenda (licht → donker) laat zien wat "meer" betekent. Bij een domein-tab de kleur van dat domein, bij "Alles" een neutrale kleur.
+- Klik op een gekleurd land toont de items daar als kaartjes onder de kaart (zelfde kaartjes als de tijdlijn/topic-grid). Landen zonder items zijn niet klikbaar.
+- Bij item toevoegen/bewerken: een kleine kaart waarop je één of meerdere landen aanklikt (toggle), met de geselecteerde landen ook als chips eronder om te verwijderen zonder precies te moeten klikken.
+- Oude `region`-waarden zijn bij de migratie best-effort omgezet naar `countries` (alleen exacte, veelvoorkomende landnamen herkend). Items die niets kregen, kun je gewoon opnieuw een land geven via bewerken.
 
 ---
 

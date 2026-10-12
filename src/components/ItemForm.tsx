@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { parseYear, formatYearRange } from '../lib/year'
 import { fetchYoutubeMetadata } from '../lib/youtube'
 import { joinList, parseList } from '../lib/list'
+import { CountryPicker } from './CountryPicker'
 import type { Domain, DatePrecision, Item, ItemType } from '../types/item'
 
 const DOMAINS: { value: Domain; label: string }[] = [
@@ -38,7 +39,7 @@ export function ItemForm({ item, onSaved, onClose }: Props) {
   const [precisionOverride, setPrecisionOverride] = useState<DatePrecision | null>(
     item?.date_precision ?? null,
   )
-  const [region, setRegion] = useState(item?.region ?? '')
+  const [countries, setCountries] = useState<string[]>(item?.countries ?? [])
   const [peopleInput, setPeopleInput] = useState(item ? joinList(item.people) : '')
   const [tagsInput, setTagsInput] = useState(item ? joinList(item.tags) : '')
   const [notes, setNotes] = useState(item?.notes ?? '')
@@ -89,7 +90,7 @@ export function ItemForm({ item, onSaved, onClose }: Props) {
       year_start: parsedYear ? parsedYear.year_start : null,
       year_end: parsedYear ? parsedYear.year_end : null,
       date_precision: parsedYear ? precision : 'era',
-      region: region.trim() || null,
+      countries,
       people: parseList(peopleInput),
       tags: parseList(tagsInput),
       notes,
@@ -238,16 +239,10 @@ export function ItemForm({ item, onSaved, onClose }: Props) {
           </label>
         )}
 
-        <label className="flex flex-col gap-1 text-sm">
-          Regio
-          <input
-            type="text"
-            value={region}
-            onChange={(e) => setRegion(e.target.value)}
-            placeholder="bv. Europa, Griekenland"
-            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-          />
-        </label>
+        <div className="flex flex-col gap-1 text-sm">
+          Landen
+          <CountryPicker value={countries} onChange={setCountries} />
+        </div>
 
         <label className="flex flex-col gap-1 text-sm">
           Personen

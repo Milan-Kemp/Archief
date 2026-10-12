@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import { supabase } from '../lib/supabase'
 import { extractYoutubeId } from '../lib/youtube'
 import { DOMAIN_COLORS, DOMAIN_LABELS } from '../lib/domain'
+import { countryName } from '../lib/countries'
 import { formatYearRange } from '../lib/year'
 import { ItemForm } from '../components/ItemForm'
 import type { Item } from '../types/item'
@@ -93,9 +94,11 @@ export function ItemDetail() {
             </p>
           )}
           {item.topic && <p className="text-sm text-neutral-500 dark:text-neutral-400">{item.topic}</p>}
-          {(item.region || item.people.length > 0 || item.tags.length > 0) && (
+          {(item.countries.length > 0 || item.people.length > 0 || item.tags.length > 0) && (
             <div className="flex flex-col gap-1 pt-1 text-xs text-neutral-400 dark:text-neutral-500">
-              {item.region && <p>Regio: {item.region}</p>}
+              {item.countries.length > 0 && (
+                <p>Landen: {item.countries.map(countryName).join(', ')}</p>
+              )}
               {item.people.length > 0 && <p>Personen: {item.people.join(', ')}</p>}
               {item.tags.length > 0 && <p>Tags: {item.tags.join(', ')}</p>}
             </div>
