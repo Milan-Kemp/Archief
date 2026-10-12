@@ -9,4 +9,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// PKCE i.p.v. de implicit-flow default: de magic-link code komt dan in een
+// query-param (?code=...) terecht, niet in de URL-hash. Anders botst Supabase's
+// eigen hash-opschoning (window.location.hash = '') met HashRouter, wat na het
+// inloggen een wit scherm gaf.
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: { flowType: 'pkce' },
+})

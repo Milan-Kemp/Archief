@@ -13,9 +13,10 @@ import type { ItemLocation } from '../../types/location'
 interface Props {
   items: Item[]
   locations: ItemLocation[]
+  loading: boolean
 }
 
-export function ItemsMap({ items, locations }: Props) {
+export function ItemsMap({ items, locations, loading }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('all')
   const mapStyle = useMapStyle()
 
@@ -58,10 +59,16 @@ export function ItemsMap({ items, locations }: Props) {
           </MarkerClusterGroup>
         </MapContainer>
 
-        {visibleLocations.length === 0 && (
+        {loading ? (
           <p className="absolute left-1/2 top-4 -translate-x-1/2 rounded-full bg-[#FAFAF7] px-3 py-1 text-sm text-neutral-500 shadow dark:bg-[#161614]">
-            Nog geen locaties in dit domein.
+            Laden...
           </p>
+        ) : (
+          visibleLocations.length === 0 && (
+            <p className="absolute left-1/2 top-4 -translate-x-1/2 rounded-full bg-[#FAFAF7] px-3 py-1 text-sm text-neutral-500 shadow dark:bg-[#161614]">
+              Nog geen locaties in dit domein.
+            </p>
+          )
         )}
       </div>
     </div>

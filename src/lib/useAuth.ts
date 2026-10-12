@@ -7,10 +7,21 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setLoading(false)
-    })
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        setSession(data.session)
+      })
+      .catch((error) => {
+        // Een kapotte/verlopen magic-link-redirect mag de app niet voor altijd
+        // op "laden" laten hangen — val terug op uitgelogd, zodat de
+        // loginpagina verschijnt in plaats van een wit scherm.
+        console.error('Auth sessie ophalen mislukt:', error)
+        setSession(null)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession)

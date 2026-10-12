@@ -9,8 +9,9 @@ import { ItemsMap } from '../components/map/ItemsMap'
 type MainView = 'timeline' | 'map'
 
 export function Home() {
-  const { items, loading, refresh } = useItems()
-  const { locations, refresh: refreshLocations } = useItemLocations()
+  const { items, loading: itemsLoading, refresh } = useItems()
+  const { locations, loading: locationsLoading, refresh: refreshLocations } = useItemLocations()
+  const loading = itemsLoading || locationsLoading
   const [showAddForm, setShowAddForm] = useState(false)
   const [mainView, setMainView] = useState<MainView>('timeline')
 
@@ -50,7 +51,7 @@ export function Home() {
         {mainView === 'timeline' ? (
           <Timeline items={items} loading={loading} />
         ) : (
-          <ItemsMap items={items} locations={locations} />
+          <ItemsMap items={items} locations={locations} loading={loading} />
         )}
       </main>
 
