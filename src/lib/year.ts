@@ -66,6 +66,10 @@ export function parseYear(input: string): ParsedYear | null {
   return null
 }
 
+export function centuryBucketStart(year: number): number {
+  return Math.floor(year / 100) * 100
+}
+
 export function formatYear(year: number): string {
   if (year < 0) return `${-year} v.Chr.`
   return `${year}`

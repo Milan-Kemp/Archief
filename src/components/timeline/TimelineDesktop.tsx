@@ -1,0 +1,97 @@
+import { useMemo } from 'react'
+import { DOMAIN_COLORS, DOMAIN_LABELS, DOMAINS } from '../../lib/domain'
+import { buildScale, getYearRange } from '../../lib/timelineScale'
+import { assignLanes } from '../../lib/timelineLayout'
+import { ItemCard } from './ItemCard'
+import type { Item, Domain } from '../../types/item'
+import type { Tab } from './DomainTabs'
+
+const CARD_WIDTH = 200
+const LANE_HEIGHT = 108
+const ROW_GAP = 32
+const AXIS_HEIGHT = 36
+
+interface Props {
+  items: Item[]
+  activeTab: Tab
+}
+
+export function TimelineDesktop({ items, activeTab }: Props) {
+  const years = items.flatMap((item) => [item.year_start, item.year_end ?? item.year_start])
+  const { min, max } = getYearRange(years)
+  const scale = useMemo(() => buildScale(min, max), [min, max])
+
+  const rows: { domain: Domain; items: Item[] }[] =
+    activeTab === 'all'
+      ? DOMAINS.map((domain) => ({ domain, items: items.filter((i) => i.domain === domain) }))
+      : [{ domain: activeTab, items }]
+
+  const rowLayouts = rows.map((row) => {
+    const entries = row.items.map((item) => {
+      const x = scale.toX(item.year_start)
+      const endX = item.year_end !== null ? scale.toX(item.year_end) : x
+      return { id: item.id, x, width: Math.max(CARD_WIDTH, endX - x) }
+    })
+    const { laneOf, laneCount } = assignLanes(entries, 16)
+    return { ...row, laneOf, laneCount: Math.max(laneCount, 1) }
+  })
+
+  const contentWidth = scale.totalWidth + CARD_WIDTH
+
+  return (
+    <div className="h-full overflow-auto">
+      <div className="relative" style={{ width: contentWidth }}>
+        {rowLayouts.map((row) => (
+          <div key={row.domain} className="relative border-b border-neutral-200/70 dark:border-neutral-800/70">
+            {activeTab === 'all' && (
+              <div className="sticky left-0 z-10 inline-flex items-center gap-1.5 bg-[#FAFAF7] px-3 py-1.5 text-xs font-medium text-neutral-500 dark:bg-[#161614] dark:text-neutral-400">
+                <span
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ backgroundColor: DOMAIN_COLORS[row.domain] }}
+                />
+                {DOMAIN_LABELS[row.domain]}
+              </div>
+            )}
+            <div
+              className="relative"
+              style={{ height: row.laneCount * LANE_HEIGHT + ROW_GAP }}
+            >
+              {row.items.map((item) => {
+                const x = scale.toX(item.year_start)
+                const endX = item.year_end !== null ? scale.toX(item.year_end) : x
+                const width = Math.max(CARD_WIDTH, endX - x)
+                const lane = row.laneOf.get(item.id) ?? 0
+                return (
+                  <div
+                    key={item.id}
+                    className="absolute"
+                    style={{ left: x, top: lane * LANE_HEIGHT + 8 }}
+                  >
+                    <ItemCard item={item} width={width} />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+
+        <div className="sticky bottom-0 bg-[#FAFAF7] dark:bg-[#161614]" style={{ height: AXIS_HEIGHT }}>
+          <div className="relative h-full border-t border-neutral-200 dark:border-neutral-800">
+            {scale.ticks.map((tick) => (
+              <div
+                key={tick.x}
+                className="absolute top-0 flex h-full flex-col items-start"
+                style={{ left: tick.x }}
+              >
+                <div className="h-2 w-px bg-neutral-300 dark:bg-neutral-700" />
+                <span className="mt-1 whitespace-nowrap text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+                  {tick.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
