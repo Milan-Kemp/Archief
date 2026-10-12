@@ -221,11 +221,15 @@ Dit is een project dat zich leent om eindeloos aan te sleutelen. Zie de "Niet bo
 
 ### 10. Embedded video's werken niet
 Sommige video's staan embedding niet toe (vooral muziek en sommige documentaires).
-**Oplossing:** bij embed-fout terugvallen op thumbnail met link naar YouTube.
+**Oplossing:** de video laadt niet meer automatisch mee — eerst een thumbnail met een afspeelknop (klik-om-af-te-spelen), de iframe komt er pas bij een klik bij. Scheelt een zware embed per paginalaad, en bij een embed-fout val je terug op de thumbnail met link naar YouTube.
 
 ### 11. PWA-cache toont oude versie
 Service workers kunnen een oude build blijven tonen na een update.
 **Oplossing:** `registerType: 'autoUpdate'` in `vite-plugin-pwa`, en een kleine melding "Nieuwe versie, herlaad".
+
+### 12. Wit scherm na navigeren (Chrome-only, geen crash)
+Na het verlaten van de kaartweergave (MapLibre/WebGL + Leaflet, veel CSS-transform-lagen) kan Chrome's compositor in de war raken: de DOM staat er correct, maar er wordt niets getekend tot het venster van grootte verandert of DevTools opent — beide forceren Chrome om zijn laagboom opnieuw te berekenen. Edge en Firefox hebben dit niet. MapLibre's eigen `Map.remove()` ruimt de WebGL-context al correct op (`WEBGL_lose_context`/`loseContext`, geverifieerd in de library-code), dus dit is geen lek van onze kant maar een Chrome-compositorbug die zelfs bij correcte cleanup kan optreden.
+**Oplossing:** na elke route-wissel automatisch hetzelfde doen als het handmatige window-resize-trucje — een geforceerde reflow (`display: none` → `offsetHeight` lezen → terugzetten) plus scroll-naar-boven. Zie `RouteChangeEffects`. Daarnaast de video-embed pas laden na een klik (risico 10) om de GPU-druk te verlagen.
 
 ---
 

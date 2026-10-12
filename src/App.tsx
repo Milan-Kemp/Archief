@@ -1,6 +1,7 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './lib/useAuth'
 import { Login } from './components/Login'
+import { RouteChangeEffects } from './components/RouteChangeEffects'
 import { Home } from './pages/Home'
 import { ItemDetail } from './pages/ItemDetail'
 
@@ -19,6 +20,7 @@ function App() {
 
   return (
     <HashRouter>
+      <RouteChangeEffects />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/item/:id" element={<ItemDetail />} />

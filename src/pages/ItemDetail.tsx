@@ -6,6 +6,7 @@ import { extractYoutubeId } from '../lib/youtube'
 import { DOMAIN_COLORS, DOMAIN_LABELS } from '../lib/domain'
 import { formatYearRange } from '../lib/year'
 import { ItemForm } from '../components/ItemForm'
+import { VideoEmbed } from '../components/VideoEmbed'
 import type { Item } from '../types/item'
 import type { ItemLocation } from '../types/location'
 
@@ -19,7 +20,6 @@ export function ItemDetail() {
   const [editingNotes, setEditingNotes] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
-  const [videoError, setVideoError] = useState(false)
 
   async function loadItem() {
     if (!id) return
@@ -111,42 +111,14 @@ export function ItemDetail() {
           )}
         </div>
 
-        {item.type === 'video' &&
-          (videoId && !videoError ? (
-            <div className="flex flex-col gap-2">
-              <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
-                <iframe
-                  className="h-full w-full"
-                  src={`https://www.youtube.com/embed/${videoId}`}
-                  title={item.title}
-                  allow="accelerate-compute; autoplay; encrypted-media; picture-in-picture"
-                  allowFullScreen
-                  onError={() => setVideoError(true)}
-                />
-              </div>
-              {item.url && (
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
-                >
-                  Bekijk op YouTube ↗
-                </a>
-              )}
-            </div>
-          ) : (
-            item.url && (
-              <a href={item.url} target="_blank" rel="noreferrer" className="block">
-                {item.thumbnail_url && (
-                  <img src={item.thumbnail_url} alt="" className="w-full rounded-lg object-cover" />
-                )}
-                <span className="mt-1 inline-block text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200">
-                  Video kan hier niet worden ingeladen — bekijk op YouTube ↗
-                </span>
-              </a>
-            )
-          ))}
+        {item.type === 'video' && videoId && item.url && (
+          <VideoEmbed
+            videoId={videoId}
+            thumbnailUrl={item.thumbnail_url}
+            title={item.title}
+            url={item.url}
+          />
+        )}
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
