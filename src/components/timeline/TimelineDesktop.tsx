@@ -2,14 +2,10 @@ import { useMemo } from 'react'
 import { DOMAIN_COLORS, DOMAIN_LABELS, DOMAINS } from '../../lib/domain'
 import { buildScale, getYearRange } from '../../lib/timelineScale'
 import { assignLanes } from '../../lib/timelineLayout'
+import { AXIS_HEIGHT, BAR_HEIGHT, CARD_HEIGHT, CARD_WIDTH, LANE_HEIGHT, ROW_GAP } from '../../lib/timelineConstants'
 import { ItemCard } from './ItemCard'
 import type { Item, Domain } from '../../types/item'
 import type { Tab } from './DomainTabs'
-
-const CARD_WIDTH = 200
-const LANE_HEIGHT = 108
-const ROW_GAP = 32
-const AXIS_HEIGHT = 36
 
 interface Props {
   items: Item[]
@@ -29,8 +25,8 @@ export function TimelineDesktop({ items, activeTab }: Props) {
   const rowLayouts = rows.map((row) => {
     const entries = row.items.map((item) => {
       const x = scale.toX(item.year_start)
-      const endX = item.year_end !== null ? scale.toX(item.year_end) : x
-      return { id: item.id, x, width: Math.max(CARD_WIDTH, endX - x) }
+      const barWidth = item.year_end !== null ? scale.toX(item.year_end) - x : 0
+      return { id: item.id, x, width: Math.max(CARD_WIDTH, barWidth) }
     })
     const { laneOf, laneCount } = assignLanes(entries, 16)
     return { ...row, laneOf, laneCount: Math.max(laneCount, 1) }
@@ -40,11 +36,11 @@ export function TimelineDesktop({ items, activeTab }: Props) {
 
   return (
     <div className="h-full overflow-auto">
-      <div className="relative" style={{ width: contentWidth }}>
+      <div className="relative min-w-full" style={{ width: contentWidth }}>
         {rowLayouts.map((row) => (
           <div key={row.domain} className="relative border-b border-neutral-200/70 dark:border-neutral-800/70">
             {activeTab === 'all' && (
-              <div className="sticky left-0 z-10 inline-flex items-center gap-1.5 bg-[#FAFAF7] px-3 py-1.5 text-xs font-medium text-neutral-500 dark:bg-[#161614] dark:text-neutral-400">
+              <div className="sticky left-0 z-20 inline-flex items-center gap-1.5 bg-[#FAFAF7] px-3 py-1.5 text-xs font-medium text-neutral-500 dark:bg-[#161614] dark:text-neutral-400">
                 <span
                   className="h-1.5 w-1.5 rounded-full"
                   style={{ backgroundColor: DOMAIN_COLORS[row.domain] }}
@@ -53,21 +49,30 @@ export function TimelineDesktop({ items, activeTab }: Props) {
               </div>
             )}
             <div
-              className="relative"
+              className="relative overflow-hidden"
               style={{ height: row.laneCount * LANE_HEIGHT + ROW_GAP }}
             >
               {row.items.map((item) => {
                 const x = scale.toX(item.year_start)
-                const endX = item.year_end !== null ? scale.toX(item.year_end) : x
-                const width = Math.max(CARD_WIDTH, endX - x)
+                const barWidth = item.year_end !== null ? scale.toX(item.year_end) - x : 0
                 const lane = row.laneOf.get(item.id) ?? 0
+                const top = lane * LANE_HEIGHT + 8
                 return (
-                  <div
-                    key={item.id}
-                    className="absolute"
-                    style={{ left: x, top: lane * LANE_HEIGHT + 8 }}
-                  >
-                    <ItemCard item={item} width={width} />
+                  <div key={item.id} className="absolute" style={{ left: x, top }}>
+                    {barWidth > 0 && (
+                      <div
+                        className="absolute rounded-full"
+                        style={{
+                          top: CARD_HEIGHT - BAR_HEIGHT - 2,
+                          left: 0,
+                          width: Math.max(barWidth, CARD_WIDTH),
+                          height: BAR_HEIGHT,
+                          backgroundColor: DOMAIN_COLORS[item.domain],
+                          opacity: 0.5,
+                        }}
+                      />
+                    )}
+                    <ItemCard item={item} />
                   </div>
                 )
               })}

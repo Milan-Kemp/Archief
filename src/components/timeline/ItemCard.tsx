@@ -1,22 +1,26 @@
 import { DOMAIN_COLORS } from '../../lib/domain'
+import { CARD_HEIGHT, CARD_WIDTH } from '../../lib/timelineConstants'
 import { formatYearRange } from '../../lib/year'
 import type { Item } from '../../types/item'
 
 interface Props {
   item: Item
-  width: number
 }
 
-export function ItemCard({ item, width }: Props) {
+export function ItemCard({ item }: Props) {
   return (
     <div
-      className="absolute flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
-      style={{ width, borderLeft: `3px solid ${DOMAIN_COLORS[item.domain]}` }}
+      className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
+      style={{
+        width: CARD_WIDTH,
+        height: CARD_HEIGHT,
+        borderLeft: `3px solid ${DOMAIN_COLORS[item.domain]}`,
+      }}
     >
       {item.thumbnail_url && (
-        <img src={item.thumbnail_url} alt="" className="h-20 w-full object-cover" />
+        <img src={item.thumbnail_url} alt="" className="h-20 w-full shrink-0 object-cover" />
       )}
-      <div className="flex flex-col gap-0.5 p-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden p-2">
         <p className="truncate font-serif text-sm leading-tight text-[#1C1C1A] dark:text-[#F5F5F2]">
           {item.title}
         </p>
