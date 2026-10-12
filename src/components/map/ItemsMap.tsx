@@ -3,7 +3,7 @@ import { MapContainer, Marker, Popup } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import { itemMarkerIcon } from '../../lib/markerIcon'
 import { useMapStyle } from '../../lib/useMapStyle'
-import { MAX_MAP_ZOOM, MIN_MAP_ZOOM, WORLD_MAX_BOUNDS } from '../../lib/mapBounds'
+import { MAX_MAP_ZOOM, MIN_MAP_ZOOM, VERTICAL_MAX_BOUNDS } from '../../lib/mapBounds'
 import { DomainTabs, type Tab } from '../timeline/DomainTabs'
 import { ItemCard } from '../timeline/ItemCard'
 import { MapLibreLayer } from './MapLibreLayer'
@@ -37,8 +37,9 @@ export function ItemsMap({ items, locations }: Props) {
           zoom={2}
           minZoom={MIN_MAP_ZOOM}
           maxZoom={MAX_MAP_ZOOM}
-          maxBounds={WORLD_MAX_BOUNDS}
+          maxBounds={VERTICAL_MAX_BOUNDS}
           maxBoundsViscosity={1.0}
+          worldCopyJump
           style={{ height: '100%', width: '100%' }}
         >
           <MapLibreLayer styleUrl={mapStyle} />

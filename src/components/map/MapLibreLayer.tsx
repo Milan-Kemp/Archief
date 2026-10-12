@@ -4,6 +4,7 @@ import L from 'leaflet'
 import { setWorkerUrl } from 'maplibre-gl'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import '@maplibre/maplibre-gl-leaflet'
+import { loadEnglishMapStyle } from '../../lib/englishMapStyle'
 
 // MapLibre zoekt zijn worker-bestand standaard relatief aan de plek van de
 // gebundelde JS-chunk — die staat er niet, dus zonder dit faalt de worker
@@ -21,10 +22,18 @@ export function MapLibreLayer({ styleUrl }: Props) {
   const map = useMap()
 
   useEffect(() => {
-    const layer = L.maplibreGL({ style: styleUrl })
-    layer.addTo(map)
+    let cancelled = false
+    let layer: L.MaplibreGL | null = null
+
+    loadEnglishMapStyle(styleUrl).then((style) => {
+      if (cancelled) return
+      layer = L.maplibreGL({ style })
+      layer.addTo(map)
+    })
+
     return () => {
-      map.removeLayer(layer)
+      cancelled = true
+      if (layer) map.removeLayer(layer)
     }
   }, [map, styleUrl])
 

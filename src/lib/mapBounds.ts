@@ -1,9 +1,11 @@
 import type { LatLngBoundsExpression } from 'leaflet'
 
-// Voorkomt grijze balken en een herhalende wereld bij uitzoomen/pannen.
-export const WORLD_MAX_BOUNDS: LatLngBoundsExpression = [
-  [-85, -180],
-  [85, 180],
+// Alleen verticaal begrensd (Mercator kan de polen toch niet tonen), horizontaal
+// onbegrensd zodat eindeloos zijwaarts slepen kan zoals bij Google Maps. Infinity
+// als lng-grens is een bekende Leaflet-truc: de pixel-clamp wordt dan een no-op.
+export const VERTICAL_MAX_BOUNDS: LatLngBoundsExpression = [
+  [-85, -Infinity],
+  [85, Infinity],
 ]
 export const MIN_MAP_ZOOM = 2
 // leaflet.markercluster vereist een eindige maxZoom op de Leaflet-kaart zelf
