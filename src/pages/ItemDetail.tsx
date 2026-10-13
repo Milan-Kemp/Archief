@@ -1,14 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { supabase } from '../lib/supabase'
 import { extractYoutubeId } from '../lib/youtube'
 import { DOMAIN_COLORS, DOMAIN_LABELS } from '../lib/domain'
 import { formatYearRange } from '../lib/year'
+import { handleBulletKeyDown } from '../lib/bulletList'
 import { ItemForm } from '../components/ItemForm'
 import { VideoEmbed } from '../components/VideoEmbed'
 import type { Item } from '../types/item'
 import type { ItemLocation } from '../types/location'
+
+const SAVE_DEBOUNCE_MS = 800
 
 export function ItemDetail() {
   const { id } = useParams()
@@ -20,6 +23,7 @@ export function ItemDetail() {
   const [editingNotes, setEditingNotes] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   async function loadItem() {
     if (!id) return
@@ -44,11 +48,39 @@ export function ItemDetail() {
     loadItem()
   }, [id])
 
-  async function saveNotes() {
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    }
+  }, [])
+
+  async function saveNotesValue(value: string) {
     if (!item) return
     setSaveState('saving')
-    const { error } = await supabase.from('items').update({ notes }).eq('id', item.id)
+    const { error } = await supabase.from('items').update({ notes: value }).eq('id', item.id)
     setSaveState(error ? 'idle' : 'saved')
+  }
+
+  function scheduleSave(value: string) {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    saveTimeoutRef.current = setTimeout(() => {
+      saveTimeoutRef.current = null
+      saveNotesValue(value)
+    }, SAVE_DEBOUNCE_MS)
+  }
+
+  function flushSave() {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+      saveTimeoutRef.current = null
+    }
+    saveNotesValue(notes)
+  }
+
+  function updateNotes(next: string) {
+    setNotes(next)
+    setSaveState('idle')
+    scheduleSave(next)
   }
 
   if (loading) return null
@@ -124,13 +156,16 @@ export function ItemDetail() {
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Notities</h2>
             <div className="flex items-center gap-2">
-              {saveState === 'saved' && !editingNotes && (
+              {saveState === 'saving' && (
+                <span className="text-xs text-neutral-400">Opslaan...</span>
+              )}
+              {saveState === 'saved' && (
                 <span className="text-xs text-neutral-400">Opgeslagen</span>
               )}
               <button
                 type="button"
                 onClick={() => {
-                  if (editingNotes) saveNotes()
+                  if (editingNotes) flushSave()
                   setEditingNotes(!editingNotes)
                 }}
                 className="text-xs text-neutral-500 underline hover:text-neutral-800 dark:hover:text-neutral-200"
@@ -143,13 +178,26 @@ export function ItemDetail() {
           {editingNotes ? (
             <textarea
               value={notes}
-              onChange={(e) => {
-                setNotes(e.target.value)
-                setSaveState('idle')
+              onChange={(e) => updateNotes(e.target.value)}
+              onKeyDown={(e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                  e.preventDefault()
+                  flushSave()
+                  setEditingNotes(false)
+                  return
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault()
+                  flushSave()
+                  setEditingNotes(false)
+                  return
+                }
+                handleBulletKeyDown(e, updateNotes)
               }}
-              onBlur={saveNotes}
+              onBlur={flushSave}
               rows={12}
-              placeholder="Markdown-notities..."
+              placeholder="- typ een - om een opsomming te beginnen"
+              autoFocus
               className="rounded-lg border border-neutral-300 bg-white p-3 text-sm leading-relaxed dark:border-neutral-700 dark:bg-neutral-900"
             />
           ) : notes ? (

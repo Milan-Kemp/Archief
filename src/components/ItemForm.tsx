@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { parseYear, formatYearRange } from '../lib/year'
 import { fetchYoutubeMetadata } from '../lib/youtube'
 import { joinList, parseList } from '../lib/list'
+import { handleBulletKeyDown } from '../lib/bulletList'
 import { LocationPicker } from './LocationPicker'
 import type { Domain, DatePrecision, Item, ItemType } from '../types/item'
 import type { LocationPoint } from '../types/location'
@@ -308,7 +309,9 @@ export function ItemForm({ item, onSaved, onClose }: Props) {
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
+            onKeyDown={(e) => handleBulletKeyDown(e, setNotes)}
             rows={3}
+            placeholder="- typ een - om een opsomming te beginnen"
             className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
           />
         </label>

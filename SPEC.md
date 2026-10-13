@@ -32,6 +32,7 @@ Secundair: het is een portfolioproject. Code moet netjes en leesbaar zijn, met e
 | PWA | `vite-plugin-pwa` | Installeerbaar op telefoon |
 | Hosting | GitHub Pages via GitHub Actions | Bekende workflow |
 | Notities | Markdown, render met `react-markdown` | Simpel, exporteerbaar |
+| Notities-editor | Gewone `<textarea>` + eigen opsomming-/auto-save-logica (geen rich-text-library) | Blijft platte markdown, past bij "simpel, exporteerbaar" |
 | Kaart | `react-leaflet` + `react-leaflet-cluster`, vector-tegels van OpenFreeMap (via `@maplibre/maplibre-gl-leaflet`), Nominatim voor geocoding | Gratis, geen API-key, geen watermerk, echte interactieve kaart met zoom/pan en clustering |
 
 Geen andere dependencies toevoegen zonder het eerst te vragen.
@@ -112,6 +113,7 @@ RLS aan op **alle** tabellen. Policy: `user_id = auth.uid()` voor select, insert
   - Klik op een marker opent een popup met het kaartje van het item en een link naar de detailpagina
   - Bij item toevoegen/bewerken: zoeken op plaatsnaam (Nominatim) en exact klikken om een punt te plaatsen, plaatsnaam automatisch ingevuld via reverse geocoding, meerdere punten per item mogelijk
 - Item openen: notities lezen en bewerken, video embedded afspelen, velden bewerken
+- **Notities schrijven als opsomming** (in de detailpagina én het toevoeg-formulier): Enter zet een nieuw "- " neer, Shift+Enter is een nieuwe regel binnen hetzelfde punt, Backspace op een leeg punt haalt het teken weg i.p.v. één teken te wissen. Op de detailpagina: automatisch opslaan tijdens typen (gedebouncet, met "Opslaan..."/"Opgeslagen"-indicator), Ctrl+Enter of Esc sluit de bewerkmodus en slaat meteen op
 - Werkt op telefoonbreedte
 
 ### Fase 2: bruikbaar maken
